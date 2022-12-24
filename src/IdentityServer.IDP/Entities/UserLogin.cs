@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IdentityServer.IDP.Entities;
 
-public class UserLogin
+public class UserLogin: IConcurrencyAware
 {
     public Guid Id { get; set; }
     public string Provider { get; set; }

@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IdentityServer.IDP.Entities;
 
-public class UserClaim
+public class UserClaim: IConcurrencyAware
 {
     public Guid Id { get; set; }
     public string Type { get; set; } = default!;

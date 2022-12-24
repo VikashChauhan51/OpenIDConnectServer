@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IdentityServer.IDP.Entities;
 
-public class User
+public class User: IConcurrencyAware
 {
     public Guid Id { get; set; }
     public string Subject { get; set; } = default!;

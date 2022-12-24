@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 
 namespace IdentityServer.IDP.Entities;
-public class UserSecret
+public class UserSecret: IConcurrencyAware
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = default!;
