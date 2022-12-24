@@ -18,6 +18,20 @@ public static class Config
             new ApiScope("scope2"),
         };
 
+    public static IEnumerable<ApiResource> ApiResources =>
+    new ApiResource[]
+        {
+             new ApiResource("imagegalleryapi",
+                 "Image Gallery API",
+                 new [] { "role" })
+             {
+                 Scopes = { "imagegalleryapi.fullaccess",
+                     "imagegalleryapi.read",
+                     "imagegalleryapi.write"},
+                ApiSecrets = { new Secret("apisecret".Sha256()) }
+             }
+        };
+
     public static IEnumerable<Client> Clients =>
         new Client[]
         {

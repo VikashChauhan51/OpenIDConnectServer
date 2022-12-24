@@ -16,6 +16,7 @@ public class User: IConcurrencyAware
     public string Phone { get; set; } = default!;
     public string? PhoneSecurityCode { get; set; }
     public DateTime? PhoneSecurityCodeExpirationDate { get; set; }
+    public string Address { get; set; } = default!;
     public string ConcurrencyStamp { get; set; } = Guid.NewGuid().ToString();
 
     public ICollection<UserClaim> Claims { get; set; } = new List<UserClaim>();
@@ -34,6 +35,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(user => user.ConcurrencyStamp).IsRequired().HasMaxLength(50).IsConcurrencyToken();
         builder.Property(user => user.Email).IsRequired().HasMaxLength(50);
         builder.Property(user => user.Phone).IsRequired().HasMaxLength(15);
+        builder.Property(user => user.Address).IsRequired().HasMaxLength(150);
         builder.Property(user => user.Password).HasMaxLength(200);
         builder.Property(user => user.EmailSecurityCode).HasMaxLength(200);
         builder.Property(user => user.PhoneSecurityCode).HasMaxLength(200);
