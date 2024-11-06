@@ -21,7 +21,12 @@ try
         .ConfigurePipeline();
 
     // seed the configuration database
-   // SeedData.EnsureSeedData(app);
+#if DEBUG
+    if (args.Contains("/seed"))
+    {
+        SeedData.InitializeDatabase(app);
+    }
+#endif
 
     app.Run();
 }
