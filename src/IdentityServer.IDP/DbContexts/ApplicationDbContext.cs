@@ -1,21 +1,15 @@
 ﻿using IdentityServer.IDP.Entities;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace IdentityServer.IDP.DbContexts;
 
-public class IdentityDbContext : DbContext
+public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 {
 
-    public DbSet<User> Users { get; set; } = null!;
-
-    public DbSet<UserClaim> UserClaims { get; set; } = null!;
-
-    public DbSet<UserLogin> UserLogins { get; set; } = null!;
-
-    public DbSet<UserSecret> UserSecrets { get; set; } = null!;
 
 
-    public IdentityDbContext(DbContextOptions<IdentityDbContext> options) : base(options)
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
     {
         base.ChangeTracker.LazyLoadingEnabled = false;
         base.ChangeTracker.AutoDetectChangesEnabled = false;
@@ -24,7 +18,7 @@ public class IdentityDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(UserConfiguration).Assembly);
+       // modelBuilder.ApplyConfigurationsFromAssembly(typeof(UserConfiguration).Assembly);
 
     }
 

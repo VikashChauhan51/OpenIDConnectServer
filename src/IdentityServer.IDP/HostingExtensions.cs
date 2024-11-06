@@ -1,11 +1,13 @@
 using Duende.IdentityServer;
 using IdentityServer.IDP;
 using IdentityServer.IDP.DbContexts;
+using IdentityServer.IDP.Entities;
 using IdentityServer.IDP.Services;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Migrations.Internal;
 using Serilog;
 
 namespace IdentityServer.IDP;
@@ -16,21 +18,24 @@ internal static class HostingExtensions
     {
         builder.Services.AddRazorPages();
 
-        builder.Services.AddScoped<IPasswordHasher<Entities.User>,
-            PasswordHasher<Entities.User>>();
-
-        builder.Services.AddScoped<ILocalUserService, LocalUserService>();
-
-        builder.Services.AddDbContext<IdentityDbContext>(options =>
+        builder.Services.AddDbContext<ApplicationDbContext>(options =>
         {
-            options.UseSqlServer(
+            options.UseSqlite(
                builder.Configuration
-               .GetConnectionString("IdentityServerDatabase"));
+               .GetConnectionString("IdentityServerDatabase"),
+               dbOpts => dbOpts.MigrationsAssembly(typeof(Program).Assembly.FullName));
         });
 
+        builder.Services
+            .AddIdentity<ApplicationUser, IdentityRole>()
+            .AddEntityFrameworkStores<ApplicationDbContext>()
+            .AddDefaultTokenProviders();
 
         var isBuilder = builder.Services.AddIdentityServer(options =>
             {
+                options.Caching.ClientStoreExpiration = TimeSpan.FromMinutes(5);
+                options.Caching.ResourceStoreExpiration = TimeSpan.FromMinutes(5);
+
                 options.Events.RaiseErrorEvents = true;
                 options.Events.RaiseInformationEvents = true;
                 options.Events.RaiseFailureEvents = true;
@@ -39,17 +44,32 @@ internal static class HostingExtensions
                 // see https://docs.duendesoftware.com/identityserver/v6/fundamentals/resources/
                 options.EmitStaticAudienceClaim = true;
             })
-            .AddTestUsers(TestUsers.Users);
+            .AddAspNetIdentity<ApplicationUser>()
+             .AddConfigurationStore(options =>
+             {
+                 options.ConfigureDbContext = opt =>
+                 opt.UseSqlite(builder.Configuration
+               .GetConnectionString("IdentityServerDatabase"),
+                         sql => sql.MigrationsAssembly(typeof(Program).Assembly.FullName));
+             })
+             .AddConfigurationStoreCache()
+             .AddOperationalStore(options =>
+             {
+                 options.ConfigureDbContext = opt =>
+                 opt.UseSqlite(builder.Configuration
+               .GetConnectionString("IdentityServerDatabase"),
+                         sql => sql.MigrationsAssembly(typeof(Program).Assembly.FullName));
+                 // this enables automatic token cleanup. this is optional.
+                 options.EnableTokenCleanup = true;
+                 options.TokenCleanupInterval = 3600; // interval in seconds (default is 3600)
+             })
+             .AddDeveloperSigningCredential();
 
-        // in-memory, code config
-        isBuilder.AddInMemoryIdentityResources(Config.IdentityResources);
-        isBuilder.AddInMemoryApiScopes(Config.ApiScopes);
-        isBuilder.AddInMemoryClients(Config.Clients);
 
 
         // if you want to use server-side sessions: https://blog.duendesoftware.com/posts/20220406_session_management/
         // then enable it
-        //isBuilder.AddServerSideSessions();
+        isBuilder.AddServerSideSessions();
         //
         // and put some authorization on the admin/management pages
         //builder.Services.AddAuthorization(options =>
@@ -104,12 +124,12 @@ internal static class HostingExtensions
 
         return builder.Build();
     }
-    
+
     public static WebApplication ConfigurePipeline(this WebApplication app)
     {
         app.UseForwardedHeaders();
         app.UseSerilogRequestLogging();
-    
+
         if (app.Environment.IsDevelopment())
         {
             app.UseDeveloperExceptionPage();
@@ -119,7 +139,7 @@ internal static class HostingExtensions
         app.UseRouting();
         app.UseIdentityServer();
         app.UseAuthorization();
-        
+
         app.MapRazorPages()
             .RequireAuthorization();
 
